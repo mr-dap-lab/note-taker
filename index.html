@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Hurdles</title>
+    
+    <!-- 
+      EXTENSION SHIELD:
+      Prevents browser extensions (like TronLink wallet) from throwing unhandled errors
+      (e.g., Cannot read properties of null (reading 'tronlinkParams')) when executed inside a sandboxed iframe.
+    -->
+    <script>
+      (function() {
+        // Define a robust global process object for browser-side libraries & CDN packages
+        window.process = {
+          env: {
+            API_KEY: '',
+            GEMINI_API_KEY: ''
+          }
+        };
+
+        const shieldProperty = (propName) => {
+          let value = {};
+          try {
+            Object.defineProperty(window, propName, {
+              get: () => value,
+              set: (val) => {
+                // If an extension tries to set this property to null or undefined,
+                // keep it as an empty object to avoid "Cannot read properties of null" style crashes.
+                value = (val === null || val === undefined) ? {} : val;
+              },
+              configurable: true,
+              enumerable: true
+            });
+          } catch (e) {
+            console.warn(`Extension shield failed to mount on window.${propName}`, e);
+          }
+        };
+        
+        // Shield common properties injected by TronLink/Web3 extensions
+        shieldProperty('tronLink');
+        shieldProperty('tronWeb');
+        shieldProperty('sunWeb');
+        shieldProperty('tron');
+
+        // Gracefully catch and suppress unhandled extension-origin exceptions
+        window.addEventListener('error', function(event) {
+          const msg = event.message || '';
+          if (msg.includes('tronlink') || msg.includes('tronLink') || msg.includes('tronlinkParams')) {
+            event.stopImmediatePropagation();
+            event.preventDefault();
+          }
+        }, true);
+
+        window.addEventListener('unhandledrejection', function(event) {
+          const reasonMsg = (event.reason && event.reason.message) || '';
+          if (reasonMsg.includes('tronlink') || reasonMsg.includes('tronLink') || reasonMsg.includes('tronlinkParams')) {
+            event.stopImmediatePropagation();
+            event.preventDefault();
+          }
+        }, true);
+      })();
+    </script>
+    
+    <!-- 
+      JUNIOR DEV NOTE: Tailwind CSS (CDN)
+      For this demo/prototype, we are loading Tailwind via CDN (Content Delivery Network).
+      In a real production app, you would install tailwind via npm (npm install tailwindcss)
+      and run a build step to generate a small, optimized CSS file.
+      Using the CDN is great for quick development but slower for users because it 
+      compiles CSS in the browser on the fly.
+    -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      /**
+       * Tailwind Configuration
+       * We can customize the design token (colors, fonts) directly in the browser here.
+       * 'fs-dark', 'fs-primary' are custom utility classes we can use like 'bg-fs-primary'.
+       */
+      tailwind.config = {
+        darkMode: 'class', // Enables toggling dark mode via a parent CSS class
+        theme: {
+          extend: {
+            colors: {
+              fs: {
+                dark: '#1b2636', // Dark Slate from screenshot
+                darker: '#131b26',
+                primary: '#47b881', // Teal/Green accent
+                secondary: '#64748b',
+                light: '#f1f5f9',
+                border: '#e2e8f0'
+              }
+            },
+            fontFamily: {
+              sans: ['Inter', 'system-ui', 'sans-serif'],
+            },
+            animation: {
+              'pulse-slow': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      body {
+        background-color: #f8fafc;
+        color: #1e293b;
+      }
+      /* Custom Scrollbar for a cleaner look */
+      ::-webkit-scrollbar {
+        width: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 3px;
+      }
+    </style>
+  
+  <!--
+    JUNIOR DEV NOTE: Import Maps
+    This is a modern browser feature that lets us import libraries like 'react' 
+    directly from a URL (esm.sh) without using a bundler like Webpack or Vite locally 
+    for the import resolution logic (though Vite handles this in dev).
+    This setup allows the code to run in environments like StackBlitz or simple servers easily.
+  -->
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "lucide-react": "https://esm.sh/lucide-react@^0.561.0",
+    "@google/genai": "https://esm.sh/@google/genai@^1.33.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body>
+    <!-- 
+      React Mount Point
+      React will take over this <div> and render the entire application inside it.
+      See index.tsx for the code that does this: root.render(<App />)
+    -->
+    <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>

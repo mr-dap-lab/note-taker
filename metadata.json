@@ -1,0 +1,12 @@
+{
+  "name": "My Hurdles",
+  "description": "A companion app for board members to record, annotate, and share meeting audio.",
+  "requestFramePermissions": [
+    "microphone",
+    "camera",
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
